@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>우리 집에 온 아이</title>
+<meta name="description" content="어떤 아이가 올지는 모른다. 어떤 개로 자랄지는 매일의 습관이 같이 만든다. 반려견 한 마리의 일생을 함께 사는 웹게임.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="우리 집에 온 아이">
+<meta property="og:description" content="같은 아이를 데려가면, 너는 어떻게 키울까.">
+<meta property="og:image" content="og.png">
+<meta name="theme-color" content="#BFE3F5">
+<!-- 휴대폰 '강제 다크 모드'가 글씨색만 바꿔 안 보이게 만드는 것을 막는다 -->
+<meta name="color-scheme" content="only light">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23BFE3F5'/%3E%3Cpath fill='%23F06B8B' d='M3 5h4v1h2V5h4v4h-1v1h-1v1h-1v1H9v1H7v-1H6v-1H5v-1H4V9H3z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<!-- 오픈소스 (GitHub) -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js"></script>
+<script defer src="events.js"></script>
+<script defer src="routes.js"></script>
+<script defer src="training.js"></script>
+<script defer src="data.js"></script>
+<script defer src="game.js"></script>
+</head>
+<body>
+<header class="top">
+  <span class="brand">우리 집에 온 아이</span>
+  <button id="soundBtn" class="icon-btn" type="button" aria-pressed="true" aria-label="소리 끄기">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="mute" d="M16 9l5 6M21 9l-5 6"/></svg>
+  </button>
+</header>
+
+<main id="app">
+  <!-- 처음 -->
+  <section id="intro" class="screen" hidden>
+    <div class="scene tall" data-mode="spring">
+      <canvas class="sky" aria-hidden="true"></canvas>
+      <div class="dog-wrap"><canvas id="introDog" class="dog" width="256" height="168" aria-hidden="true"></canvas></div>
+    </div>
+    <div class="intro-copy">
+      <h1>우리 집에<br>온 아이</h1>
+      <p class="lead">어떤 아이가 올지는 모른다.<br>어떤 개로 자랄지는 매일의 습관이 같이 만든다.</p>
+      <button id="startBtn" class="btn primary big" type="button">아이 데려오기</button>
+      <p class="fine">한 판 20~30분 · 가입도 저장도 없다.</p>
+    </div>
+  </section>
+
+  <!-- 입양·이름 -->
+  <section id="arrive" class="screen" hidden>
+    <div class="scene" data-mode="spring">
+      <canvas class="sky" aria-hidden="true"></canvas>
+      <p id="arriveBubble" class="bubble" hidden></p>
+      <div class="dog-wrap"><canvas id="arriveDog" class="dog" width="256" height="168" aria-hidden="true"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2 id="arriveTitle" class="reveal">새 식구가 왔다</h2>
+      <dl id="arriveFacts" class="facts reveal"></dl>
+      <form id="nameForm" class="name-box reveal" autocomplete="off">
+        <label for="arriveName" class="name-label">이 아이에게 이름을 지어 주세요</label>
+        <div class="name-row">
+          <input id="arriveName" type="text" maxlength="8" spellcheck="false" placeholder="이름" required>
+        </div>
+        <div id="nameChips" class="chips" aria-label="이름 예시"></div>
+        <button id="nameBtn" class="btn primary big" type="submit" disabled>이름 불러 주기</button>
+      </form>
+      <button id="againBtn" class="link-btn reveal" type="button">다른 아이 데려오기</button>
+    </div>
+  </section>
+
+  <!-- 함께 살기 -->
+  <section id="life" class="screen" hidden>
+    <div class="life-grid">
+      <div class="scene life-scene" id="lifeScene" data-mode="spring">
+        <canvas class="sky" aria-hidden="true"></canvas>
+        <div class="hud">
+          <div class="pill who"><strong id="lifeName"></strong><span id="lifeMeta"></span></div>
+          <div class="pill when"><strong id="lifeAge"></strong><span id="lifeWhen"></span><i id="tickBar" class="tick-bar" aria-hidden="true"></i></div>
+        </div>
+        <p id="bubble" class="bubble" hidden></p>
+        <p id="wantBubble" class="bubble want-bubble" hidden></p>
+        <p id="notice" class="notice" role="status" aria-live="polite" hidden></p>
+        <div id="popfx" class="popfx" aria-hidden="true"></div>
+        <div id="result" class="result" role="status" aria-live="polite" hidden>
+          <p class="rs-kind"></p>
+          <p class="rs-verdict" hidden></p>
+          <div class="rs-meter" hidden></div>
+          <div class="rs-fx"></div>
+          <p class="rs-why" hidden></p>
+          <div class="rs-story">
+            <p class="rs-pick"></p>
+            <p class="rs-text"></p>
+          </div>
+          <p class="rs-tip" hidden></p>
+          <button class="rs-more" type="button" hidden>이야기 더 보기</button>
+          <button class="rs-x" type="button">닫기</button>
+          <button class="rs-skip" type="button" hidden>넘기기 ▶</button>
+          <i class="rs-bar" aria-hidden="true"></i>
+        </div>
+        <div class="dog-wrap"><canvas id="lifeDog" class="dog" width="256" height="168" aria-hidden="true"></canvas></div>
+        <p id="petHint" class="pet-hint" hidden>아이를 눌러 쓰다듬어 주세요</p>
+        <p id="coach" class="coach" hidden><span></span></p>
+        <div class="pet-actions">
+          <button id="walkBtn" class="act" type="button"><i data-icon="leash"></i>산책</button>
+          <button id="ballBtn" class="act" type="button"><i data-icon="ball"></i>공놀이</button>
+          <button id="trainBtn" class="act act-main" type="button"><i data-icon="book"></i><span>교육하기</span></button>
+        </div>
+      </div>
+      <div class="panel life-panel">
+        <button id="missionBar" class="mission-bar" type="button" hidden></button>
+        <div id="stats" class="stats" aria-label="상태"></div>
+        <div id="habits" class="habits" aria-label="문제 행동"></div>
+        <div class="tabs" role="tablist">
+          <button role="tab" id="tabRoutine" aria-selected="true" aria-controls="paneRoutine" type="button">생활 습관</button>
+          <button role="tab" id="tabDiary" aria-selected="false" aria-controls="paneDiary" type="button">함께 산 기록</button>
+        </div>
+        <div id="paneRoutine" role="tabpanel" aria-labelledby="tabRoutine">
+          <p class="hint">매일 하는 일이 쌓여서 개가 된다. <span id="consLabel" class="cons"></span></p>
+          <div id="routine" class="routine"></div>
+          <p id="routineWarn" class="warn" hidden></p>
+          <p id="gearLine" class="gear-line" hidden></p>
+        </div>
+        <div id="paneDiary" role="tabpanel" aria-labelledby="tabDiary" hidden>
+          <ol id="diary" class="diary" aria-live="polite"></ol>
+        </div>
+      </div>
+    </div>
+    <nav class="speed" aria-label="시간 흐름 배속">
+      <button type="button" data-speed="1" aria-pressed="false" aria-label="1배속">×1</button>
+      <button type="button" data-speed="2" aria-pressed="true" aria-label="2배속">×2</button>
+      <button type="button" data-speed="4" aria-pressed="false" aria-label="4배속">×4</button>
+      <button type="button" data-speed="8" aria-pressed="false" aria-label="8배속">×8</button>
+      <button type="button" data-speed="16" aria-pressed="false" aria-label="16배속">×16</button>
+      <button type="button" id="skipBtn" class="skip" aria-label="다음 칸으로 바로 넘기기">넘기기 ▶</button>
+    </nav>
+  </section>
+
+  <!-- 작별 -->
+  <section id="farewell" class="screen" hidden>
+    <div class="scene full" id="fwScene" data-mode="sunset">
+      <canvas class="sky" aria-hidden="true"></canvas>
+      <div class="dog-wrap"><canvas id="fwDog" class="dog" width="256" height="168" aria-hidden="true"></canvas></div>
+      <div class="fw-box">
+        <p id="fwChapter" class="fw-chapter"></p>
+        <div id="fwLines" class="fw-lines"></div>
+        <button id="fwNext" class="btn primary" type="button">계속</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 끝 -->
+  <section id="end" class="screen" hidden>
+    <div class="end-hero">
+      <article id="card" class="card polaroid">
+        <canvas class="card-pic" width="288" height="200" aria-hidden="true"></canvas>
+        <h2 class="card-name"></h2>
+        <p class="card-breed"></p>
+        <p class="card-life"></p>
+        <p class="card-cause"></p>
+        <p class="card-ending" hidden></p>
+        <div class="card-type-box"><span class="card-label">이 아이의 보호자</span><strong class="card-type"></strong><span class="card-typeline"></span></div>
+        <ul class="card-habits"></ul>
+        <p class="card-foot"><span class="card-walks"></span><span class="card-site">우리 집에 온 아이</span></p>
+      </article>
+    </div>
+    <div class="end-actions reveal">
+      <button id="shareBtn" class="btn primary" type="button">카톡으로 보내기</button>
+      <button id="saveBtn" class="btn ghost" type="button">사진으로 저장</button>
+    </div>
+    <section class="ending-wrap reveal" aria-labelledby="endTitle">
+      <p class="end-kicker" id="endKicker"></p>
+      <h3 id="endTitle" class="end-title"></h3>
+      <div id="endLines" class="end-lines"></div>
+      <p id="endCount" class="end-count"></p>
+    </section>
+    <section class="letter-wrap reveal" aria-labelledby="letterH">
+      <h3 id="letterH" class="sec-h"></h3>
+      <div id="letter" class="letter"></div>
+    </section>
+    <section class="next-wrap reveal" aria-labelledby="nextH" hidden>
+      <h3 id="nextH" class="sec-h">다음 아이에게는</h3>
+      <p id="nextLead" class="impact-lead"></p>
+      <ul id="nextList" class="next-list"></ul>
+    </section>
+    <section class="impact-wrap reveal" aria-labelledby="impactH">
+      <h3 id="impactH" class="sec-h">선택이 남긴 것</h3>
+      <p id="impactLead" class="impact-lead"></p>
+      <div id="impactMap" class="impact-map"></div>
+      <p class="impact-legend"><span><i style="background:#3E9A62"></i>좋아진 쪽</span><span><i style="background:#D9563F"></i>나빠진 쪽</span><span>굵을수록 크게</span></p>
+      <ul id="impactSum" class="impact-sum"></ul>
+    </section>
+    <section class="review-wrap reveal" aria-labelledby="reviewH">
+      <h3 id="reviewH" class="sec-h">돌아보기</h3>
+      <p id="reviewScore" class="review-score"></p>
+      <ol id="review" class="review"></ol>
+      <h4 class="sub-h" id="trainH">교육은 어떻게 했나</h4>
+      <p id="trainScore" class="review-score"></p>
+      <ol id="trainReview" class="review"></ol>
+    </section>
+    <details class="bio-wrap fold reveal">
+      <summary><h3 id="bioH" class="sec-h">일대기</h3><span class="fold-hint">펼쳐 보기</span></summary>
+      <div id="bio" class="bio"></div>
+    </details>
+    <details class="facts-wrap fold reveal">
+      <summary><h3 id="factsH" class="sec-h">알고 보면</h3><span class="fold-hint">펼쳐 보기</span></summary>
+      <ul id="facts" class="fact-list"></ul>
+    </details>
+    <button id="newBtn" class="btn ghost wide reveal" type="button">다른 아이 데려오기</button>
+  </section>
+
+  <!-- 받은 결과 -->
+  <section id="shared" class="screen" hidden>
+    <div class="end-hero">
+      <p id="sharedTitle" class="shared-title"></p>
+      <article id="sharedCard" class="card polaroid">
+        <canvas class="card-pic" width="288" height="200" aria-hidden="true"></canvas>
+        <h2 class="card-name"></h2>
+        <p class="card-breed"></p>
+        <p class="card-life"></p>
+        <p class="card-cause"></p>
+        <p class="card-ending" hidden></p>
+        <div class="card-type-box"><span class="card-label">이 아이의 보호자</span><strong class="card-type"></strong><span class="card-typeline"></span></div>
+        <ul class="card-habits"></ul>
+        <p class="card-foot"><span class="card-walks"></span><span class="card-site">우리 집에 온 아이</span></p>
+      </article>
+    </div>
+    <button id="sameBtn" class="btn primary wide big" type="button"></button>
+    <p id="sameNote" class="fine center"></p>
+    <button id="sharedNewBtn" class="btn ghost wide" type="button">다른 아이 데려오기</button>
+  </section>
+</main>
+
+<div id="backdrop" class="backdrop" hidden></div>
+<div id="sheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetText" hidden>
+  <p class="sheet-top"><span class="sheet-tag"></span><span class="sheet-when"></span></p>
+  <p id="sheetText" class="sheet-text"></p>
+  <div class="sheet-head" hidden></div>
+  <div class="choices"></div>
+  <p class="sheet-result" hidden></p>
+  <p class="sheet-mind" hidden></p>
+  <p class="sheet-note" hidden></p>
+  <button class="btn primary sheet-next" type="button" hidden>계속</button>
+</div>
+<p id="toast" class="toast" role="status" hidden></p>
+</body>
+</html>
